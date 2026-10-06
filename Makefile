@@ -1,7 +1,7 @@
 TOP=$(HOME)/genii/export
 CPPFLAGS= #-I$(TOP)/include
-CXXFLAGS=-g -Wall -g0 -O3
-LDFLAGS=-lboost_thread-mt
+CXXFLAGS=-g -Wall -g0 -O3 -pthread
+LDFLAGS=-pthread
 
 prod_cons: prod_cons.o myrand.o
 	$(LINK.cpp) -o $@ $^

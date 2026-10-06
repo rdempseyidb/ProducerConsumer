@@ -27,7 +27,8 @@ using MyList_t = std::queue<Object>;
 
 MyList_t queue_;
 std::mutex queue_mutex;
-std::condition_variable queue_cond;
+std::condition_variable not_full_cond;
+std::condition_variable not_empty_cond;
 std::atomic<bool> quit(false);
 constexpr size_t MaxSize = 20;
 
@@ -61,14 +62,14 @@ void Producer::operator()() const {
 			std::unique_lock<std::mutex> lock(queue_mutex);
 			while (queue_.size() >= MaxSize && !quit) {
 				std::cout << label_ << ": waiting for queue to have room..." << std::endl;
-				queue_cond.wait(lock);
+				not_full_cond.wait(lock);
 			}
 			if (quit) return;
 
 			std::cout << label_ << ": putting new item on queue" << std::endl;
 			queue_.push(Object(rng()));
 		}
-		queue_cond.notify_one();
+		not_empty_cond.notify_one();
 
 		if (quit) return;
 		usleep(rng() * 10000);
@@ -83,7 +84,7 @@ void Consumer::operator()() const {
 			std::unique_lock<std::mutex> lock(queue_mutex);
 			while (queue_.empty() && !quit) {
 				std::cout << label_ << ": waiting for queue to have an item..." << std::endl;
-				queue_cond.wait(lock);
+				not_empty_cond.wait(lock);
 			}
 			if (quit) return;
 
@@ -92,7 +93,7 @@ void Consumer::operator()() const {
 			queue_.pop();
 			std::cout << item.v() << std::endl;
 		}
-		queue_cond.notify_one();
+		not_full_cond.notify_one();
 
 		if (quit) return;
 		usleep(rng() * 10000);
@@ -117,7 +118,8 @@ int main(int argc, char** argv) {
 	sleep(45);
 
 	quit = true;
-	queue_cond.notify_all();
+	not_full_cond.notify_all();
+	not_empty_cond.notify_all();
 
 	for (auto& t : threads) {
 		t.join();
