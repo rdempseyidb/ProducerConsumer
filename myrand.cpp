@@ -1,27 +1,19 @@
 #include "myrand.h"
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <stdexcept>
-using namespace std;
 
-namespace myrand
-{
+namespace myrand {
 
-MyRand::MyRand(int min, int max) :
-	fMin(min),
-	fMax(max)
-{
-	if (fMax < fMin) throw range_error("max<min");
-	int fd;
-	fd = open("/dev/random", O_RDONLY);
-	if (fd < 0) throw runtime_error("open");
-	read(fd, &fSeed, 4);
-	close(fd);
+MyRand::MyRand(int min, int max)
+	: engine_(std::random_device{}()),
+	  distribution_(min, max) {
+	if (max < min) {
+		throw std::range_error("max < min");
+	}
+}
+
+int MyRand::generate() {
+	return distribution_(engine_);
 }
 
 }
-// vim:ts=4 sw=4:
 

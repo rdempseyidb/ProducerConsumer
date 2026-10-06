@@ -1,34 +1,27 @@
 #ifndef MYRAND_MYRAND_H__
 #define MYRAND_MYRAND_H__
 
-#include <cstdlib>
+#include <random>
 
-namespace myrand
-{
-class MyRand
-{
+namespace myrand {
+
+class MyRand {
 public:
 	explicit MyRand(int min, int max);
-	~MyRand() { }
+	~MyRand() = default;
 
-	int generate()
-	{ return (fMin + (int)((double)(fMax - fMin + 1) * (rand_r(&fSeed) / (RAND_MAX + 1.0)))); }
-
+	int generate();
 	int operator()() { return generate(); }
 
-protected:
+	MyRand(const MyRand&) = delete;
+	MyRand& operator=(const MyRand&) = delete;
 
 private:
-	//defaults okay (I guess)
-	MyRand(const MyRand& rhs);
-	MyRand& operator=(const MyRand& rhs);
-
-	unsigned int fSeed;
-	int fMin;
-	int fMax;
+	std::mt19937 engine_;
+	std::uniform_int_distribution<int> distribution_;
 };
+
 }
 
 #endif
-// vim:ts=4 sw=4:
 
